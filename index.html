@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>ascii image generator</title>
+</head>
+
+<body>
+    <h2>ascii video generator</h2>
+    <a href="./testvid.mp4" download>download testvid.mp4</a>
+    <p id="status">OpenCV.js is loading...</p>
+    <div>
+        <div class="inputoutput">
+            <div>
+                <video id="videoInput"></video> <canvas id="canvasOutput"></canvas>
+            </div>
+            <div>
+                <label>videofile <input type="file" accept="video/*" id="fileInput" name="file" /></label>
+            </div>
+            <div>
+                <label>max char count<input type="number" value="2000" id="maxCnt"></label>
+            </div>
+            <div>
+                <label>reverse<input type="checkbox" id="reverseBox"></label>
+            </div>
+        </div>
+        <div class="inputoutput">
+            <pre id="outPut"></pre>
+        </div>
+    </div>
+    <script type="text/javascript">
+        const grayText = ['⠀','⠄','⠆','⠖','⠶','⡶','⣩','⣪','⣫','⣾','⣿'];
+        grayText.reverse();
+        const reverseTxt = [...grayText]
+        grayText.reverse();
+
+        const video = document.getElementById("videoInput");
+        const outPutDom = document.getElementById("outPut");
+        const maxCntDom = document.getElementById('maxCnt');
+        const reverseBox = document.getElementById('reverseBox');
+        const fileDom = document.getElementById('fileInput');
+
+        function onOpenCvReady(){
+            cv['onRuntimeInitialized']=()=>{
+                main();
+            };
+        }
+
+        function sizeInPixel(a,d,pixel = 2000){
+            a*=1.7;
+            const tempx = (-1+Math.sqrt(1+((pixel+1)*4*a/d)))/2;
+            const tempy = pixel / (tempx + 1);
+            return [parseInt(tempx), parseInt(tempy)];
+        }
+
+        function toAscii(dst, [row, col]){
+            let grid = [];
+            
+            if (dst.isContinuous()) {
+                for(let r = 0; r < row; r++){
+                    let temp = ''
+                    for(let c = 0; c < col; c++){
+                        let R = dst.ucharPtr(r, c);
+                        if(reverseBox.checked){
+                            temp += reverseTxt[parseInt(R[0] / 25)];
+                        }
+                        else{
+                            temp += grayText[parseInt(R[0] / 25)];
+                        }
+                    }
+                    grid.push(temp)
+                }
+            }
+            return grid.join('\n')
+        }
+
+
+        function main(){
+            document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+            
+            fileDom.onchange = (e)=>{
+                video.src = URL.createObjectURL(e.target.files[0]);
+
+                video.width = 640;
+                video.height = 480;
+                video.play();
+    
+                let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+                let dst = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+                let cap = new cv.VideoCapture(video);
+    
+                const FPS = 30;
+                function processVideo() {
+                    const pixel = parseInt(maxCntDom.value);
+                    const [col, row] = sizeInPixel(src.matSize[1], src.matSize[0], pixel);
+                    const dsize = new cv.Size(col, row);
+                    try {
+                        let begin = Date.now();
+                        cap.read(src);
+                        cv.resize(src, dst, dsize, 0, 0, cv.INTER_AREA);
+                        cv.cvtColor(dst, dst, cv.COLOR_RGBA2GRAY);
+                        outPutDom.innerHTML = toAscii(dst, [row, col]);
+                        let delay = 1000 / FPS - (Date.now() - begin);
+                        setTimeout(processVideo, delay);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+                
+                setTimeout(processVideo, 0);
+            }
+        }
+    </script>
+    <script async src="https://docs.opencv.org/master/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+</body>
+
+</html>
