@@ -4,6 +4,16 @@
 <head>
     <meta charset="utf-8">
     <title>ascii video generator</title>
+    <style>
+        @font-face {
+            font-family: 'unifont';
+            src: url('./unifont-13.0.06.ttf') format('truetype');
+        }
+
+        pre {
+            font-family: 'unifont';
+        }
+    </style>
 </head>
 
 <body>
@@ -30,7 +40,8 @@
         </div>
     </div>
     <script type="text/javascript">
-        const grayText = ['⠀','⠄','⠆','⠖','⠶','⡶','⣩','⣪','⣫','⣾','⣿'];
+        const grayText = ['⠀','⠄','⠆','⠖','⠶','⡶','⣩','⣪','⣫','⣾','⣿']
+            // .map(e=>`<span style="display:inline-block;width: 8.7px;">${e}</span>`);
         grayText.reverse();
         const reverseTxt = [...grayText]
         grayText.reverse();
