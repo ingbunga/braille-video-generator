@@ -1,4 +1,4 @@
-# ascii video generator
+# braille video generator
 
 ## demo
 
